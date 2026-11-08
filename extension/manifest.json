@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "ProxyPaste",
+  "version": "0.1.0",
+  "description": "Type into remote consoles and transfer text in either direction through supported noVNC clipboards.",
+  "permissions": ["activeTab", "scripting", "clipboardWrite"],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "proxypaste@vindex.local",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": { "required": ["none"] }
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "64": "icons/icon-64.png",
+    "96": "icons/icon-96.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "ProxyPaste",
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/icon-16.png", "32": "icons/icon-32.png" }
+  }
+}

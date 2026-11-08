@@ -1,0 +1,41 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ProxyPaste</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header><img src="icons/icon-32.png" width="20" height="20" alt=""><h1>ProxyPaste</h1></header>
+  <main>
+    <div class="option-row">
+      <label for="mode">Method</label>
+      <select id="mode"><option value="type">Type text</option><option value="paste">Clipboard paste</option><option value="copy">Copy out</option></select>
+    </div>
+    <label class="text-label" for="text">Text</label>
+    <textarea id="text" rows="8" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="Paste text here" aria-describedby="mode-warning"></textarea>
+    <p id="draft-status" class="notice" role="status" hidden></p>
+    <div class="option-row" id="speed-panel">
+      <label for="delay">Key delay</label>
+      <div class="delay-field"><input id="delay" type="number" min="0" max="2000" step="10" value="50" aria-describedby="delay-unit"><span id="delay-unit">ms</span></div>
+    </div>
+    <p class="notice" id="mode-warning">Newlines press Enter and may run commands.</p>
+    <div class="actions">
+      <button id="copy" disabled hidden>Copy locally</button>
+      <button id="stop" disabled hidden>Stop</button>
+      <button id="start" disabled><span id="start-label">Type into console</span></button>
+    </div>
+    <section class="job" aria-label="Console status">
+      <p id="status" class="status" role="status" aria-live="polite">Finding a console...</p>
+      <progress id="progress" value="0" max="1" aria-label="Typing progress" hidden></progress>
+    </section>
+    <details>
+      <summary>Help</summary>
+      <p id="usage-note">Click inside your console before opening ProxyPaste. Typing continues when this popup closes. Reopen to stop.</p>
+      <p>Only the current text is saved locally as a draft. Clearing or sending it removes the draft.</p>
+    </details>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>ProxyPaste event receiver</title>
+<style>body { font: 16px system-ui; max-width: 800px; margin: 40px auto; } canvas { border: 2px solid #667; width: 640px; height: 180px; } pre { white-space: pre-wrap; }</style>
+<h1>ProxyPaste event receiver</h1>
+<p>Click the canvas, open ProxyPaste, and send text. This tests event delivery, not a real remote console.</p>
+<canvas id="noVNC_canvas" tabindex="0" width="640" height="180"></canvas>
+<h2>Received text</h2><pre id="received"></pre>
+<h2>Mock noVNC clipboard</h2>
+<p>This control records a transfer request only. It does not provide guest clipboard support.</p>
+<textarea id="noVNC_clipboard_text" aria-label="Mock noVNC clipboard"></textarea>
+<p>Clipboard requests: <span id="clipboard-count">0</span></p>
+<pre id="clipboard-received"></pre>
+<script>
+  let clipboardRequests = 0;
+  document.querySelector('#noVNC_clipboard_text').addEventListener('change', event => {
+    document.querySelector('#clipboard-count').textContent = ++clipboardRequests;
+    document.querySelector('#clipboard-received').textContent = event.target.value;
+  });
+  const canvas = document.querySelector('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.font = '20px monospace';
+  ctx.fillText('Click here, then open ProxyPaste', 20, 90);
+  canvas.addEventListener('keydown', event => {
+    event.preventDefault();
+    if (event.key !== 'Shift') document.querySelector('#received').textContent += ({ Enter: '\n', Tab: '\t' })[event.key] ?? event.key;
+  });
+</script>
+</html>
