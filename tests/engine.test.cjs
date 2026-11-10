@@ -96,6 +96,7 @@ test('preserves existing canvas tabindex and configured delay', () => {
   env.api.start('ab', 125);
   env.tick();
   assert.equal([...env.timers.values()][0].delay, 125);
+  assert.equal(env.api.inspect().delay, 125);
   env.tick();
   assert.equal(env.attributes.get('tabindex'), '0');
 });

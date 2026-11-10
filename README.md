@@ -4,7 +4,7 @@ ProxyPaste types text into a visible remote console and transfers text in either
 
 ## Choose a send method
 
-- **Type · keystrokes** works with accessible canvas consoles. Set the character delay (start at 50 ms), then click **Type into console**. Reopen the popup to check progress or stop a running job.
+- **Type · keystrokes** works with accessible canvas consoles. Set the character delay (start at 50 ms), then click **Type into console** or press Ctrl+Enter (Command+Enter on macOS) in the text box. The popup shows the character count and an estimated typing time before you start, and the time remaining while typing. Reopen the popup to check progress or stop a running job.
 - **Paste · remote clipboard** sends the entire text in one transfer request using noVNC's existing clipboard change handler. Click **Send to remote clipboard**, then use the guest application's **Paste** command. There is no typing delay, generated keystroke, or automatic paste shortcut. Delivery and insertion inside the guest cannot be confirmed by the extension.
 - **Copy out** reads the current noVNC clipboard into the popup. First copy text inside the guest, choose **Copy out**, click **Read noVNC clipboard**, review the text, and click **Copy locally**. You can then paste into an application on your computer. Reading does not change your local clipboard; only the separate Copy locally click does. If the browser blocks that write, the popup selects the text for manual Ctrl+C or Command+C copying.
 
@@ -33,9 +33,9 @@ Use current desktop releases. Chrome and Edge use the same extension code and pe
 
 ### Safari on macOS
 
-The Safari ZIP contains web-extension source, not an installable Safari app. Safari requires Apple's packaging tools and an app wrapper. This Windows workspace cannot build, sign, or validate that app.
+The Safari ZIP contains web-extension source, not an installable Safari app. Safari requires Apple's packaging tools and an app wrapper, which must be built, signed, and validated on a Mac with Xcode.
 
-1. Run `npm run build`, then copy `dist/safari` to a Mac with Xcode installed (or extract `proxypaste-safari.zip` there).
+1. On a Mac with Xcode installed, run `npm run build` and use `dist/safari` (or extract `proxypaste-safari.zip`).
 2. Follow [Apple's Safari packaging guide](https://developer.apple.com/documentation/safariservices/packaging-a-web-extension-for-safari) to package that directory and create the containing app. The tool was previously named `safari-web-extension-converter`; use the tool and options supplied with your Xcode version. Review any compatibility warnings it reports.
 3. Open the generated project in Xcode, configure its signing team, and build/run the macOS app target. For local development, enable Safari's extension development options and **Allow Unsigned Extensions** if required by your signing setup.
 4. Enable ProxyPaste in **Safari > Settings > Extensions**, allow access to the console website when Safari asks, then open the console and use the toolbar popup.
@@ -67,14 +67,14 @@ Temporary installation ends when Firefox restarts. Permanent installation in sta
 
 ## Validation
 
-Run `npm test` for typing-engine tests (key order, modifiers, line endings, Unicode, timing, cancellation, reinjection, disconnected canvases, and invalid input), clipboard transfer/read and unavailable-control checks, explicit local clipboard writing and manual-copy fallback, popup mode switching and failure handling using both API namespaces, single-draft recovery/clearing and storage errors, and browser build checks. These automated tests mock extension APIs; they do not replace browser integration tests.
+Run `npm test` for typing-engine tests (key order, modifiers, line endings, Unicode, timing, cancellation, reinjection, disconnected canvases, and invalid input), clipboard transfer/read and unavailable-control checks, explicit local clipboard writing and manual-copy fallback, popup mode switching and failure handling using both API namespaces, single-draft recovery/clearing and storage errors, character-count and time estimates, the Ctrl/Command+Enter shortcut, and browser build and ZIP packaging checks. These automated tests mock extension APIs; they do not replace browser integration tests.
 
 For a browser smoke test, serve this folder (`python -m http.server 8765`), visit `http://localhost:8765/tests/console.html`, and send `Hello!`, punctuation, tabs, and multiline text. Start a longer typing job, close/reopen the popup, and stop it midway. Switch to Paste and verify a single clipboard request with the exact text and no additional keystrokes. Fill the fixture's mock clipboard field, choose Copy out, read it, and verify Copy locally by pasting into a local editor. Also test an empty field and rejected clipboard-write permission. Then test against your actual noVNC console and a guest with configured clipboard support; the fixture does not verify remote acceptance.
 
-Package all four builds on Windows:
+Package all four builds (macOS, Linux, or Windows; no extra tools required):
 
-```powershell
-npm.cmd run package
+```bash
+npm run package
 ```
 
-This writes `proxypaste-firefox.zip`, `proxypaste-chrome.zip`, `proxypaste-edge.zip`, and `proxypaste-safari.zip`. Extract Chrome/Edge ZIPs before using **Load unpacked**. The Safari ZIP is input for Apple's packaging tools. Load the Firefox ZIP with **Load Temporary Add-on** or submit it for Mozilla signing. These are development artifacts, not store-published releases. Packaging uses PowerShell's `Compress-Archive`; on other platforms use `npm run build` and ZIP the contents of each browser directory with `manifest.json` at the archive root.
+This rebuilds `dist/` and writes `proxypaste-firefox.zip`, `proxypaste-chrome.zip`, `proxypaste-edge.zip`, and `proxypaste-safari.zip`. Extract Chrome/Edge ZIPs before using **Load unpacked**. The Safari ZIP is input for Apple's packaging tools. Load the Firefox ZIP with **Load Temporary Add-on** or submit it for Mozilla signing. These are development artifacts, not store-published releases. Each archive has `manifest.json` at its root. Archives use fixed timestamps, so identical sources produce identical ZIPs. Regenerating icons (`npm run icons`) still requires PowerShell.

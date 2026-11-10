@@ -9,6 +9,9 @@ const progress = document.querySelector('#progress');
 const mode = document.querySelector('#mode');
 const copy = document.querySelector('#copy');
 const draftStatus = document.querySelector('#draft-status');
+const estimate = document.querySelector('#estimate');
+// The engine waits this long before the first keystroke so focus can settle.
+const startDelay = 300;
 const draftKey = 'currentText';
 let lastState;
 let tabId;
@@ -39,11 +42,41 @@ function restoreDraft() {
   updateCopy();
 }
 
+function characterCount(value) {
+  return Array.from(value.replace(/\r\n?/g, '\n')).length;
+}
+function duration(ms) {
+  const seconds = Math.ceil(ms / 1000);
+  if (seconds < 1) return 'under 1 s';
+  if (seconds < 60) return `about ${seconds} s`;
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  return `about ${rest ? `${minutes} min ${rest} s` : `${minutes} min`}`;
+}
+function updateEstimate() {
+  const count = characterCount(text.value);
+  const typing = mode.value === 'type';
+  estimate.hidden = !count || mode.value === 'copy' || lastState?.status === 'typing';
+  if (estimate.hidden) return;
+  const label = `${count} ${count === 1 ? 'character' : 'characters'}`;
+  const ms = Number(delay.value);
+  estimate.textContent = typing && delay.value !== '' && delay.checkValidity()
+    ? `${label} · ${duration(startDelay + (count - 1) * ms)}`
+    : label;
+}
+
 function updateCopy() {
   copy.hidden = mode.value !== 'copy';
   copy.disabled = busy || !text.value;
+  updateEstimate();
 }
 text.addEventListener('input', () => { saveDraft(); updateCopy(); });
+delay.addEventListener('input', updateEstimate);
+text.addEventListener('keydown', event => {
+  if (event.key !== 'Enter' || !(event.ctrlKey || event.metaKey) || event.isComposing) return;
+  event.preventDefault();
+  if (!start.disabled) start.click();
+});
 copy.addEventListener('click', async () => {
   if (!text.value) return;
   try {
@@ -74,7 +107,9 @@ function show(state) {
   progress.value = state.typed;
   progress.hidden = !['typing', 'done', 'stopped'].includes(state.status);
   const count = `${state.typed} / ${state.total} characters`;
-  status.textContent = ({ idle: paste ? 'Ready to send to the remote clipboard.' : 'Console found. Ready to type.', typing: `Typing: ${count}`, done: `Sent: ${count}`, stopped: `Stopped: ${count}`, clipboard: 'Clipboard transfer requested. Paste inside the guest.', error: state.error })[state.status];
+  const remaining = Number.isFinite(state.delay) && state.total > state.typed ? ` · ${duration((state.total - state.typed) * state.delay)} left` : '';
+  const ready = paste ? 'Ready to send to the remote clipboard.' : 'Console found. Ready to type.';
+  status.textContent = ({ idle: ready, typing: `Typing: ${count}${remaining}`, done: `Sent: ${count}`, stopped: `Stopped: ${count}`, clipboard: paste ? 'Clipboard transfer requested. Paste inside the guest.' : ready, error: state.error })[state.status];
   if (copying && !running) {
     progress.hidden = true;
     status.className = 'status';
@@ -118,7 +153,7 @@ function fail(error) {
   stop.disabled = true;
   stop.hidden = true;
   text.disabled = false;
-  delay.disabled = false;
+  delay.disabled = mode.value !== 'type';
   mode.disabled = false;
   updateCopy();
 }
