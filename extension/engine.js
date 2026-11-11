@@ -2,7 +2,7 @@
 // of the popup. Only counts/status are returned; completed text is released.
 (() => {
   if (globalThis.__proxyPaste) return;
-  let state = { status: 'idle', typed: 0, total: 0, error: '' };
+  let state = { status: 'idle', typed: 0, total: 0, delay: 0, error: '' };
   let timer = null;
   let characters = [];
   let target = null;
@@ -78,7 +78,7 @@
       // This is a clipboard transfer request, not confirmation of guest receipt or insertion.
       clipboard.value = text;
       clipboard.dispatchEvent(new Event('change', { bubbles: true }));
-      state = { status: 'clipboard', typed: 0, total: Array.from(text).length, error: '' };
+      state = { status: 'clipboard', typed: 0, total: Array.from(text).length, delay: 0, error: '' };
       return snapshot();
     },
     start(text, delay) {
@@ -88,7 +88,7 @@
       target = canvas();
       if (!target) throw new Error('No visible console canvas found.');
       characters = Array.from(text.replace(/\r\n?/g, '\n'));
-      state = { status: 'typing', typed: 0, total: characters.length, error: '' };
+      state = { status: 'typing', typed: 0, total: characters.length, delay, error: '' };
       addedTabIndex = !target.hasAttribute('tabindex');
       if (addedTabIndex) target.setAttribute('tabindex', '-1');
       target.focus({ preventScroll: true });

@@ -5,9 +5,9 @@ const fs = require('node:fs');
 const source = fs.readFileSync('extension/popup.js', 'utf8');
 
 async function setup(frames, namespace = 'browser', pasteError = false, copyOptions = {}) {
-  const elements = Object.fromEntries(['text', 'delay', 'start', 'stop', 'status', 'progress', 'mode', 'copy', 'speed-panel', 'start-label', 'mode-warning', 'usage-note', 'draft-status'].map(id => [id, {
+  const elements = Object.fromEntries(['text', 'delay', 'start', 'stop', 'status', 'progress', 'mode', 'copy', 'speed-panel', 'start-label', 'mode-warning', 'usage-note', 'draft-status', 'estimate'].map(id => [id, {
     value: id === 'delay' ? '50' : id === 'mode' ? 'type' : '', disabled: id === 'start' || id === 'stop',
-    addEventListener(event, fn) { this[event] = fn; }, checkValidity: () => true, focus() {}, select() { this.selected = true; }
+    addEventListener(event, fn) { this[event] = fn; }, checkValidity() { return this.valid !== false; }, focus() {}, select() { this.selected = true; }
   }]));
   const calls = [];
   const writes = [];
@@ -304,4 +304,89 @@ test('unavailable local storage explains that edits cannot be saved', async () =
   env.elements.text.input();
   assert.match(env.elements['draft-status'].textContent, /could not be saved/);
   assert.equal(env.elements.text.value, 'unsaved edit');
+});
+
+test('shows character count and typing time estimate for the current text', async () => {
+  const { elements } = await setup(readyFrames);
+  assert.equal(elements.estimate.hidden, true);
+  elements.text.value = 'ab\r\nc';
+  elements.text.input();
+  assert.equal(elements.estimate.hidden, false);
+  assert.equal(elements.estimate.textContent, '4 characters · about 1 s');
+  elements.text.value = 'x'.repeat(40);
+  elements.delay.value = '2000';
+  elements.delay.input();
+  assert.equal(elements.estimate.textContent, '40 characters · about 1 min 19 s');
+  elements.delay.value = '0';
+  elements.delay.input();
+  assert.equal(elements.estimate.textContent, '40 characters · about 1 s');
+  elements.delay.value = '2000';
+  elements.delay.valid = false;
+  elements.delay.input();
+  assert.equal(elements.estimate.textContent, '40 characters');
+  elements.delay.valid = true;
+  elements.mode.value = 'paste';
+  elements.mode.change();
+  assert.equal(elements.estimate.textContent, '40 characters');
+  elements.mode.value = 'copy';
+  elements.mode.change();
+  assert.equal(elements.estimate.hidden, true);
+});
+
+test('Ctrl+Enter and Command+Enter submit; plain Enter does not', async () => {
+  const { elements, calls } = await setup(readyFrames);
+  elements.start.click = elements.start.click.bind(elements.start);
+  let prevented = 0;
+  const key = extra => ({ key: 'Enter', preventDefault() { prevented += 1; }, ...extra });
+  elements.text.value = 'abc';
+  elements.text.keydown(key({}));
+  assert.equal(calls.filter(call => call.args?.[0] === 'start').length, 0);
+  elements.text.keydown(key({ isComposing: true, ctrlKey: true }));
+  assert.equal(calls.filter(call => call.args?.[0] === 'start').length, 0);
+  elements.text.keydown(key({ metaKey: true }));
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(calls.filter(call => call.args?.[0] === 'start').length, 1);
+  assert.equal(prevented, 1);
+});
+
+test('typing status shows time remaining when the engine reports its delay', async () => {
+  const { elements } = await setup([
+    { frameId: 0, result: { available: true, rank: 5, status: 'typing', typed: 1, total: 3, delay: 50 } }
+  ]);
+  assert.equal(elements.status.textContent, 'Typing: 1 / 3 characters · about 1 s left');
+  assert.equal(elements.estimate.hidden, true);
+});
+
+test('switching to Type after a clipboard transfer does not show stale clipboard status', async () => {
+  const { elements } = await setup([
+    { frameId: 0, result: { available: true, clipboardAvailable: true, rank: 5, status: 'clipboard', typed: 0, total: 3 } }
+  ]);
+  assert.equal(elements.status.textContent, 'Console found. Ready to type.');
+  elements.mode.value = 'paste';
+  elements.mode.change();
+  assert.match(elements.status.textContent, /transfer requested/);
+});
+
+test('failure in clipboard mode leaves the irrelevant delay field disabled', async () => {
+  const { elements } = await setup(readyFrames, 'browser', true);
+  elements.mode.value = 'paste';
+  elements.mode.change();
+  elements.text.value = 'abc';
+  await elements.start.click();
+  assert.equal(elements.delay.disabled, true);
+  elements.mode.value = 'type';
+  elements.mode.change();
+  assert.equal(elements.delay.disabled, false);
+});
+
+test('delay field accepts any whole millisecond value in range', () => {
+  const html = fs.readFileSync('extension/popup.html', 'utf8');
+  assert.match(html, /id="delay"[^>]*\bstep="1"/);
+});
+
+test('zero-delay typing status reads naturally', async () => {
+  const { elements } = await setup([
+    { frameId: 0, result: { available: true, rank: 5, status: 'typing', typed: 1, total: 3, delay: 0 } }
+  ]);
+  assert.equal(elements.status.textContent, 'Typing: 1 / 3 characters · under 1 s left');
 });

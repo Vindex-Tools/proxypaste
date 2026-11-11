@@ -18,13 +18,14 @@
     <p id="draft-status" class="notice" role="status" hidden></p>
     <div class="option-row" id="speed-panel">
       <label for="delay">Key delay</label>
-      <div class="delay-field"><input id="delay" type="number" min="0" max="2000" step="10" value="50" aria-describedby="delay-unit"><span id="delay-unit">ms</span></div>
+      <div class="delay-field"><input id="delay" type="number" min="0" max="2000" step="1" value="50" aria-describedby="delay-unit"><span id="delay-unit">ms</span></div>
     </div>
+    <p class="count" id="estimate" hidden></p>
     <p class="notice" id="mode-warning">Newlines press Enter and may run commands.</p>
     <div class="actions">
       <button id="copy" disabled hidden>Copy locally</button>
       <button id="stop" disabled hidden>Stop</button>
-      <button id="start" disabled><span id="start-label">Type into console</span></button>
+      <button id="start" disabled title="Ctrl+Enter or Command+Enter"><span id="start-label">Type into console</span></button>
     </div>
     <section class="job" aria-label="Console status">
       <p id="status" class="status" role="status" aria-live="polite">Finding a console...</p>
@@ -33,6 +34,7 @@
     <details>
       <summary>Help</summary>
       <p id="usage-note">Click inside your console before opening ProxyPaste. Typing continues when this popup closes. Reopen to stop.</p>
+      <p>Press Ctrl+Enter or Command+Enter in the text box to submit.</p>
       <p>Only the current text is saved locally as a draft. Clearing or sending it removes the draft.</p>
     </details>
   </main>
