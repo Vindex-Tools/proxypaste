@@ -4,7 +4,7 @@ ProxyPaste types text into a visible remote console and transfers text in either
 
 ## Choose a send method
 
-- **Type · keystrokes** works with accessible canvas consoles. Set the character delay (start at 50 ms), then click **Type into console** or press Ctrl+Enter (Command+Enter on macOS) in the text box. The popup shows the character count and an estimated typing time before you start, and the time remaining while typing. Reopen the popup to check progress or stop a running job.
+- **Type · keystrokes** works with accessible canvas consoles. Set the character delay (default: 30 ms), then click **Type into console** or press Ctrl+Enter (Command+Enter on macOS) in the text box. The popup shows the character count and an estimated typing time before you start, and the time remaining while typing. Reopen the popup to check progress or stop a running job.
 - **Paste · remote clipboard** sends the entire text in one transfer request using noVNC's existing clipboard change handler. Click **Send to remote clipboard**, then use the guest application's **Paste** command. There is no typing delay, generated keystroke, or automatic paste shortcut. Delivery and insertion inside the guest cannot be confirmed by the extension.
 - **Copy out** reads the current noVNC clipboard into the popup. First copy text inside the guest, choose **Copy out**, click **Read noVNC clipboard**, review the text, and click **Copy locally**. You can then paste into an application on your computer. Reading does not change your local clipboard; only the separate Copy locally click does. If the browser blocks that write, the popup selects the text for manual Ctrl+C or Command+C copying.
 

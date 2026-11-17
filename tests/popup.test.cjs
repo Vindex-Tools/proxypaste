@@ -6,7 +6,7 @@ const source = fs.readFileSync('extension/popup.js', 'utf8');
 
 async function setup(frames, namespace = 'browser', pasteError = false, copyOptions = {}) {
   const elements = Object.fromEntries(['text', 'delay', 'start', 'stop', 'status', 'progress', 'mode', 'copy', 'speed-panel', 'start-label', 'mode-warning', 'usage-note', 'draft-status', 'estimate'].map(id => [id, {
-    value: id === 'delay' ? '50' : id === 'mode' ? 'type' : '', disabled: id === 'start' || id === 'stop',
+    value: id === 'delay' ? '30' : id === 'mode' ? 'type' : '', disabled: id === 'start' || id === 'stop',
     addEventListener(event, fn) { this[event] = fn; }, checkValidity() { return this.valid !== false; }, focus() {}, select() { this.selected = true; }
   }]));
   const calls = [];
@@ -247,7 +247,7 @@ for (const namespace of ['browser', 'chrome']) {
     const reopened = await setup(readyFrames, namespace, false, { drafts: first.drafts });
     assert.equal(reopened.elements.text.value, 'latest\ntext 😀');
     assert.equal(reopened.elements.mode.value, 'type');
-    assert.equal(reopened.elements.delay.value, '50');
+    assert.equal(reopened.elements.delay.value, '30');
     reopened.elements.text.value = '';
     reopened.elements.text.input();
     assert.equal(reopened.drafts.size, 0);
