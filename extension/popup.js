@@ -216,3 +216,12 @@ restoreDraft();
     if (selected.result.status === 'typing') watch();
   } catch (error) { fail(new Error(`Cannot access this console. ${error.message}`)); }
 })();
+
+globalThis.setProxyPasteDraft = function(newText) {
+  if (text) {
+    text.value = newText;
+    saveDraft();
+    updateCopy();
+  }
+};
+

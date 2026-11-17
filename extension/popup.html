@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -7,37 +7,134 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <header><img src="icons/icon-32.png" width="20" height="20" alt=""><h1>ProxyPaste</h1></header>
-  <main>
-    <div class="option-row">
-      <label for="mode">Method</label>
-      <select id="mode"><option value="type">Type text</option><option value="paste">Clipboard paste</option><option value="copy">Copy out</option></select>
+  <div class="app-layout">
+    <nav class="sidebar" role="tablist" aria-label="Extension tabs">
+      <button class="nav-tab active" id="tab-btn-proxypaste" data-tab="proxypaste" title="ProxyPaste" aria-label="ProxyPaste" aria-controls="panel-proxypaste" aria-selected="true" tabindex="0" role="tab">
+        <svg class="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="18" y2="12"/></svg>
+      </button>
+      <button class="nav-tab" id="tab-btn-pastelibrary" data-tab="pastelibrary" title="PasteLibrary" aria-label="PasteLibrary" aria-controls="panel-pastelibrary" aria-selected="false" tabindex="-1" role="tab">
+        <svg class="tab-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+      </button>
+    </nav>
+    <div class="content-container">
+      <!-- ProxyPaste Tab Panel -->
+      <div id="panel-proxypaste" class="tab-panel active" role="tabpanel" aria-labelledby="tab-btn-proxypaste">
+        <header><img src="icons/icon-32.png" width="20" height="20" alt=""><h1>ProxyPaste</h1></header>
+        <main>
+          <div class="option-row">
+            <label for="mode">Method</label>
+            <select id="mode"><option value="type">Type text</option><option value="paste">Clipboard paste</option><option value="copy">Copy out</option></select>
+          </div>
+          <label class="text-label" for="text">Text</label>
+          <textarea id="text" rows="8" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="Paste text here" aria-describedby="mode-warning"></textarea>
+          <p id="draft-status" class="notice" role="status" hidden></p>
+          <div class="option-row" id="speed-panel">
+            <label for="delay">Key delay</label>
+            <div class="delay-field"><input id="delay" type="number" min="0" max="2000" step="1" value="30" aria-describedby="delay-unit"><span id="delay-unit">ms</span></div>
+          </div>
+          <p class="count" id="estimate" hidden></p>
+          <p class="notice" id="mode-warning">Newlines press Enter and may run commands.</p>
+          <div class="actions">
+            <button id="copy" disabled hidden>Copy locally</button>
+            <button id="stop" disabled hidden>Stop</button>
+            <button id="start" disabled title="Ctrl+Enter or Command+Enter"><span id="start-label">Type into console</span></button>
+          </div>
+          <section class="job" aria-label="Console status">
+            <p id="status" class="status" role="status" aria-live="polite">Finding a console...</p>
+            <progress id="progress" value="0" max="1" aria-label="Typing progress" hidden></progress>
+          </section>
+          <details>
+            <summary>Help</summary>
+            <p id="usage-note">Click inside your console before opening ProxyPaste. Typing continues when this popup closes. Reopen to stop.</p>
+            <p>Press Ctrl+Enter or Command+Enter in the text box to submit.</p>
+            <p>Only the current text is saved locally as a draft. Clearing or sending it removes the draft.</p>
+          </details>
+        </main>
+      </div>
+
+      <!-- PasteLibrary Tab Panel -->
+      <div id="panel-pastelibrary" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-pastelibrary" hidden>
+        <header>
+          <div class="pl-header-brand">
+            <svg class="pl-brand-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+            <h1>PasteLibrary</h1>
+          </div>
+          <div class="pl-header-actions">
+            <span id="rateLimitBadge" class="pl-badge" title="GitHub API Rate Limit">API: --/--</span>
+            <button id="toggleSettingsBtn" class="pl-icon-btn" title="Settings" aria-label="Settings">⚙</button>
+          </div>
+        </header>
+        <main class="pl-main">
+          <!-- Settings Drawer -->
+          <div id="settingsDrawer" class="pl-settings-drawer" hidden>
+            <div class="pl-setting-row">
+              <label for="tokenInput">GitHub Token (Optional)</label>
+              <div class="pl-input-group">
+                <input type="password" id="tokenInput" placeholder="ghp_... (private repos & higher limits)">
+                <button id="saveTokenBtn" type="button">Save</button>
+              </div>
+            </div>
+            <div class="pl-setting-row pl-checkbox-row">
+              <label>
+                <input type="checkbox" id="autoCopyCheckbox" checked>
+                <span>Auto-copy file text on click</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Repo input bar -->
+          <div class="pl-repo-bar">
+            <div class="pl-input-group">
+              <input type="text" id="repoUrlInput" placeholder="owner/repo or GitHub URL" autocomplete="off" spellcheck="false">
+              <button id="loadRepoBtn" class="pl-primary-btn" type="button">Browse</button>
+            </div>
+            <div id="recentChips" class="pl-chips"></div>
+          </div>
+
+          <!-- Breadcrumbs / Navigation -->
+          <div class="pl-nav-bar" id="breadcrumbBar" hidden>
+            <button id="upDirBtn" class="pl-small-btn" type="button" title="Go up one folder">⬆ Up</button>
+            <div id="breadcrumbList" class="pl-breadcrumbs"></div>
+            <input type="text" id="fileFilterInput" placeholder="Filter..." class="pl-filter-input">
+          </div>
+
+          <!-- Directory Items -->
+          <div class="pl-section-header">
+            <span class="pl-section-title">Directory Items</span>
+            <span id="itemsCountBadge" class="pl-count-badge">0 items</span>
+          </div>
+          <div id="fileListContainer" class="pl-file-list">
+            <div class="pl-empty-state">
+              <p>Enter a GitHub repository above to browse files.</p>
+            </div>
+          </div>
+
+          <!-- Preview Pane -->
+          <div class="pl-section-header pl-preview-header">
+            <div class="pl-file-meta">
+              <span id="activeFileName" class="pl-filename">No file selected</span>
+              <span id="activeFileMeta" class="pl-meta"></span>
+            </div>
+            <div class="pl-preview-actions">
+              <button id="sendToProxyPasteBtn" class="pl-small-btn" type="button" title="Send to ProxyPaste tab" disabled>→ ProxyPaste</button>
+              <button id="highlightAllBtn" class="pl-small-btn" type="button" title="Select all" disabled>Select</button>
+              <button id="copyCodeBtn" class="pl-small-btn pl-primary-btn" type="button" title="Copy code" disabled>Copy</button>
+            </div>
+          </div>
+          <div id="codeScrollBox" class="pl-code-box">
+            <div class="pl-empty-state">
+              <p>Click a text file above to preview, copy, or send to ProxyPaste.</p>
+            </div>
+          </div>
+
+          <!-- Toast notification -->
+          <p id="plToast" class="notice pl-toast" role="status" hidden></p>
+        </main>
+      </div>
     </div>
-    <label class="text-label" for="text">Text</label>
-    <textarea id="text" rows="8" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="Paste text here" aria-describedby="mode-warning"></textarea>
-    <p id="draft-status" class="notice" role="status" hidden></p>
-    <div class="option-row" id="speed-panel">
-      <label for="delay">Key delay</label>
-      <div class="delay-field"><input id="delay" type="number" min="0" max="2000" step="1" value="30" aria-describedby="delay-unit"><span id="delay-unit">ms</span></div>
-    </div>
-    <p class="count" id="estimate" hidden></p>
-    <p class="notice" id="mode-warning">Newlines press Enter and may run commands.</p>
-    <div class="actions">
-      <button id="copy" disabled hidden>Copy locally</button>
-      <button id="stop" disabled hidden>Stop</button>
-      <button id="start" disabled title="Ctrl+Enter or Command+Enter"><span id="start-label">Type into console</span></button>
-    </div>
-    <section class="job" aria-label="Console status">
-      <p id="status" class="status" role="status" aria-live="polite">Finding a console...</p>
-      <progress id="progress" value="0" max="1" aria-label="Typing progress" hidden></progress>
-    </section>
-    <details>
-      <summary>Help</summary>
-      <p id="usage-note">Click inside your console before opening ProxyPaste. Typing continues when this popup closes. Reopen to stop.</p>
-      <p>Press Ctrl+Enter or Command+Enter in the text box to submit.</p>
-      <p>Only the current text is saved locally as a draft. Clearing or sending it removes the draft.</p>
-    </details>
-  </main>
+  </div>
   <script src="popup.js"></script>
+  <script src="tabs.js"></script>
+  <script type="module" src="pastelibrary.js"></script>
 </body>
 </html>
