@@ -8,6 +8,13 @@ ProxyPaste types text into a visible remote console and transfers text in either
 - **Paste · remote clipboard** sends the entire text in one transfer request using noVNC's existing clipboard change handler. Click **Send to remote clipboard**, then use the guest application's **Paste** command. There is no typing delay, generated keystroke, or automatic paste shortcut. Delivery and insertion inside the guest cannot be confirmed by the extension.
 - **Copy out** reads the current noVNC clipboard into the popup. First copy text inside the guest, choose **Copy out**, click **Read noVNC clipboard**, review the text, and click **Copy locally**. You can then paste into an application on your computer. Reading does not change your local clipboard; only the separate Copy locally click does. If the browser blocks that write, the popup selects the text for manual Ctrl+C or Command+C copying.
 
+## PasteLibrary Tab
+
+Switch to the **PasteLibrary** tab using the left-hand navigation sidebar to browse remote GitHub repositories, inspect files with syntax highlighting, and copy or send code directly into ProxyPaste:
+- Enter any GitHub URL or `owner/repo` shorthand.
+- Browse directory trees and inspect whitelisted text and code files.
+- Selecting or copying a file copies the content to your local clipboard and automatically populates ProxyPaste's input for typing or sending.
+
 Copy out requires working guest clipboard sharing. It reads the value of noVNC's clipboard field, which can contain stale text or text previously sent from your computer. It cannot establish the value's origin or freshness. Some noVNC versions use native browser clipboard integration and do not keep that field synchronized; this implementation targets the clipboard-panel integration. It does not extract text from canvas pixels or provide OCR. A text-only VM's visible screen output cannot be copied through this feature.
 
 Paste requires guest clipboard support; a text-only VM console cannot receive clipboard paste. Proxmox requires VNC clipboard configuration and SPICE guest tools for supported guests; see its [VNC clipboard documentation](https://github.com/proxmox/pve-docs/blob/master/qm.adoc#vnc-clipboard). If the noVNC clipboard control is missing or disabled, the popup explains the limitation and disables clipboard submission. The presence of that control does not prove guest support. You can always switch back to Type.
